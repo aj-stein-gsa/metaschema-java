@@ -25,7 +25,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * Enforces a value pattern and/or data type.
  */
 public final class DefaultMatchesConstraint
-    extends AbstractConstraint
+    extends AbstractConfigurableMessageConstraint
     implements IMatchesConstraint {
   private final Pattern pattern;
   private final IDataTypeAdapter<?> dataType;

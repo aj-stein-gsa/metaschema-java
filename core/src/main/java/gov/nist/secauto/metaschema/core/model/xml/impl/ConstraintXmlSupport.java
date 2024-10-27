@@ -65,6 +65,9 @@ import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Provides XMLBeans-based parsing support for constraints.
+ */
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class ConstraintXmlSupport {
   @SuppressWarnings("PMD.UseConcurrentHashMap")

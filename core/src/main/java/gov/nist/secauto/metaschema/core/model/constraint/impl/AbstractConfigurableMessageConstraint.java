@@ -7,34 +7,40 @@ package gov.nist.secauto.metaschema.core.model.constraint.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
+import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
-import gov.nist.secauto.metaschema.core.model.constraint.IExpectConstraint;
+import gov.nist.secauto.metaschema.core.model.constraint.IConfigurableMessageConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.ISource;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.core.util.ReplacementScanner;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import nl.talsmasoftware.lazy4j.Lazy;
 
 /**
- * Represents an expect constraint.
- * <p>
- * Requires that the associated test evaluates to {@link IBooleanItem#TRUE}
- * against the target.
+ * The base class for all constraint implementations that allow a configurable
+ * message.
+ *
+ * @since 2.0.0
  */
-public final class DefaultExpectConstraint
-    extends AbstractConfigurableMessageConstraint
-    implements IExpectConstraint {
+public abstract class AbstractConfigurableMessageConstraint
+    extends AbstractConstraint
+    implements IConfigurableMessageConstraint {
   @NonNull
-  private final Lazy<MetapathExpression> testMetapath;
+  private static final Pattern METAPATH_VALUE_TEMPLATE_PATTERN
+      = ObjectUtils.notNull(Pattern.compile("(?<!\\\\)(\\{\\s*((?:(?:\\\\})|[^}])*)\\s*\\})"));
+
+  @Nullable
+  private final String message;
 
   /**
-   * Construct a new expect constraint.
+   * Construct a new Metaschema constraint.
    *
    * @param id
    *          the optional identifier for the constraint
@@ -51,16 +57,12 @@ public final class DefaultExpectConstraint
    *          the Metapath expression identifying the nodes the constraint targets
    * @param properties
    *          a collection of associated properties
-   * @param test
-   *          a Metapath expression that is evaluated against the target node to
-   *          determine if the constraint passes
    * @param message
    *          an optional message to emit when the constraint is violated
    * @param remarks
    *          optional remarks describing the intent of the constraint
    */
-  @SuppressWarnings("PMD.ExcessiveParameterList")
-  public DefaultExpectConstraint(
+  protected AbstractConfigurableMessageConstraint(
       @Nullable String id,
       @Nullable String formalName,
       @Nullable MarkupLine description,
@@ -68,28 +70,28 @@ public final class DefaultExpectConstraint
       @NonNull Level level,
       @NonNull String target,
       @NonNull Map<IAttributable.Key, Set<String>> properties,
-      @NonNull String test,
       @Nullable String message,
       @Nullable MarkupMultiline remarks) {
-    super(id, formalName, description, source, level, target, properties, message, remarks);
-    this.testMetapath = ObjectUtils.notNull(
-        Lazy.lazy(() -> MetapathExpression.compile(
-            test,
-            source.getStaticContext())));
-  }
-
-  /**
-   * Get the compiled Metapath expression for the test.
-   *
-   * @return the compiled Metapath expression
-   */
-  @NonNull
-  public MetapathExpression getTestMetapath() {
-    return ObjectUtils.notNull(testMetapath.get());
+    super(id, formalName, description, source, level, target, properties, remarks);
+    this.message = message;
   }
 
   @Override
-  public String getTest() {
-    return getTestMetapath().getPath();
+  public String getMessage() {
+    return message;
+  }
+
+  @Override
+  public String generateMessage(@NonNull INodeItem item, @NonNull DynamicContext context) {
+    String message = getMessage();
+    if (message == null) {
+      throw new IllegalStateException("A custom message is not defined.");
+    }
+
+    return ObjectUtils.notNull(ReplacementScanner.replaceTokens(message, METAPATH_VALUE_TEMPLATE_PATTERN, match -> {
+      String metapath = ObjectUtils.notNull(match.group(2));
+      MetapathExpression expr = MetapathExpression.compile(metapath, context.getStaticContext());
+      return expr.evaluateAs(item, MetapathExpression.ResultType.STRING, context);
+    }).toString());
   }
 }

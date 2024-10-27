@@ -407,7 +407,7 @@ public class MetaschemaJsonReader
         ? bodyHandler
         : new JsonKeyBodyHandler(jsonKey, bodyHandler);
 
-    JsonLocation location = getReader().currentLocation();
+    @SuppressWarnings("resource") JsonLocation location = getReader().currentLocation();
 
     // construct the item
     IBoundObject item = definition.newInstance(
@@ -486,7 +486,7 @@ public class MetaschemaJsonReader
         IBoundObject parent,
         IJsonProblemHandler problemHandler)
         throws IOException {
-      JsonParser parser = getReader();
+      @SuppressWarnings("resource") JsonParser parser = getReader();
       JsonUtil.assertCurrent(parser, JsonToken.FIELD_NAME);
 
       // the field will be the JSON key
@@ -523,7 +523,7 @@ public class MetaschemaJsonReader
         IBoundObject parent,
         IJsonProblemHandler problemHandler)
         throws IOException {
-      JsonParser parser = getReader();
+      @SuppressWarnings("resource") JsonParser parser = getReader();
 
       // advance past the start object
       JsonUtil.assertAndAdvance(parser, JsonToken.START_OBJECT);

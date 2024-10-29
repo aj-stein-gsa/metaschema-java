@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<METASCHEMA xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://csrc.nist.gov/ns/oscal/metaschema/1.0 https://raw.githubusercontent.com/metaschema-framework/metaschema/0441e6d4c9bce5b6c40b4647148019e4f47bed08/schema/xml/metaschema.xsd"
+ xmlns="http://csrc.nist.gov/ns/oscal/metaschema/1.0">
+    <schema-name>Constraint Custom Validation Test</schema-name>
+    <schema-version>0.1.0</schema-version>
+    <short-name>constraint-custom-validation-test</short-name>
+    <namespace>http://metaschema.dev/ns/metaschema/test/constraint-validation-custom-messages</namespace>
+    <json-base-uri>http://metaschema.dev/ns/metaschema/test/constraint-validation-custom-messages</json-base-uri>
+    <define-assembly name="parent">
+        <root-name>constraint-custom-validation-test</root-name>
+        <model>
+            <!-- 
+                There is no example-custom-allowed-values because there are
+                implementation details that do not permit customization.
+            -->
+            <define-field name="example-custom-expect"/>
+            <define-field name="example-custom-matches"/>            
+            <define-field name="example-default-allowed-values"/>
+            <define-field name="example-default-expect"/>
+            <define-field name="example-default-matches"/>
+        </model>
+        <constraint>
+            <expect id="id-custom-expect" target="example-custom-expect" test=". = true()" level="ERROR">
+                <message>Custom message for example-custom-expect data</message>
+            </expect>
+            <matches id="id-custom-matches" target="example-custom-matches" datatype="integer" level="ERROR">
+                <message>Custom message for example-custom-matches data</message>
+            </matches>            
+            <allowed-values id="id-default-allowed-values" target="example-default-allowed-values" level="ERROR">
+                <enum value="good">The value 'good' is the only allowed value for this field.</enum>
+            </allowed-values>
+            <expect id="id-default-expect" target="example-default-expect" test=". = true()" level="ERROR"/>
+            <matches id="id-default-matches" target="example-default-matches" datatype="integer" level="ERROR"/> 
+        </constraint>
+    </define-assembly>
+</METASCHEMA>

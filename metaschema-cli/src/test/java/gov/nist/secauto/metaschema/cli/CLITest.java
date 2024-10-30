@@ -179,6 +179,14 @@ public class CLITest {
                 "../core/metaschema/schema/metaschema/metaschema-module-metaschema.xml",
             },
             ExitCode.OK, NO_EXCEPTION_CLASS));
+        add(Arguments.of(
+            new String[] { "validate-content",
+                "-m",
+                "src/test/resources/content/constraint-validation-custom-messages-module.xml",
+                "src/test/resources/content/constraint-validation-custom-messages.xml",
+                "--disable-schema-validation"
+            },
+            ExitCode.OK, NO_EXCEPTION_CLASS));;        
       }
     };
 

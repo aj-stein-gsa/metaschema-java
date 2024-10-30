@@ -7,8 +7,10 @@
     <short-name>constraint-custom-validation-test</short-name>
     <namespace>http://metaschema.dev/ns/metaschema/test/constraint-validation-custom-messages</namespace>
     <json-base-uri>http://metaschema.dev/ns/metaschema/test/constraint-validation-custom-messages</json-base-uri>
-    <define-assembly name="parent">
-        <root-name>constraint-custom-validation-test</root-name>
+    <define-assembly name="message-test">
+    	<formal-name>Message Testing</formal-name>
+    	<description>Unit tests to address metaschema-framework/metaschema-java#215.</description>
+        <root-name>message-test</root-name>
         <model>
             <!-- 
                 There is no example-custom-allowed-values because there are

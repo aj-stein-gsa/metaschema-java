@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<constraint-custom-validation-test xmlns="http://metaschema.dev/ns/metaschema/test/constraint-validation-custom-messages">
+<message-test xmlns="http://metaschema.dev/ns/metaschema/test/constraint-validation-custom-messages">
 	<example-custom-expect>false</example-custom-expect>
 	<example-custom-matches>not-a-number</example-custom-matches>		
 	<example-default-allowed-values>bad</example-default-allowed-values>
 	<example-default-expect>false</example-default-expect>
 	<example-default-matches>not-a-number</example-default-matches>
-</constraint-custom-validation-test>
+</message-test>

@@ -105,6 +105,7 @@ public class ValidateContentUsingModuleCommand
             MetaschemaCommands.METASCHEMA_REQUIRED_OPTION,
             cwd,
             bindingContext);
+        module = bindingContext.registerModule(module);
       } catch (URISyntaxException ex) {
         throw new IOException(String.format("Cannot load module as '%s' is not a valid file or URL.", ex.getInput()),
             ex);

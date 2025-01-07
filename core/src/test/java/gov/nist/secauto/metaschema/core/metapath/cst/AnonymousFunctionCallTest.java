@@ -8,14 +8,12 @@ package gov.nist.secauto.metaschema.core.metapath.cst;
 import static gov.nist.secauto.metaschema.core.metapath.TestUtils.qname;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static gov.nist.secauto.metaschema.core.metapath.TestUtils.qname;
-
-import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression.ResultType;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
-import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression.ResultType;
+import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
+import gov.nist.secauto.metaschema.core.testing.model.mocking.MockedDocumentGenerator;
 
 import org.junit.jupiter.api.Test;
 
@@ -79,16 +77,26 @@ class AnonymousFunctionCallTest {
     // FIXME: Add test for invalid function definitions
   }
 
+  /**
+   * This tests for a regression of the issue <a href=
+   * "https://github.com/metaschema-framework/metaschema-java/issues/323">metaschema-framework/metaschema-java#323</a>.
+   */
   @Test
-  void testParameterConversionFlagNodeArgument() {
-	  StaticContext staticContext = StaticContext.builder()
-			  .namespace("ex", NS)
-			  .defaultModelNamespace(NS)
-			  .build();
-	  DynamicContext dynamicContext = new DynamicContext(staticContext);
-	  INodeItem document = MockedDocumentGenerator.generateDocumentNodeItem();
-	  dynamicContext.bindVariableValue(qname(NS, "should-dereference-param-flag-value"), IMetapathExpression.compile("function($arg as meta:string) as meta:string { $arg }", dynamicContext.getStaticContext()).evaluate(document, dynamicContext));
-	  String result = IMetapathExpression.compile("$should-dereference-param-flag-value(.)", dynamicContext.getStaticContext()).evaluateAs(document, ResultType.STRING, dynamicContext);
-	  assertEquals(result, "flag");
+  void testFunctionParameterUsingFlagNodeArgument() {
+    StaticContext staticContext = StaticContext.builder()
+        .namespace("ex", NS)
+        .defaultModelNamespace(NS)
+        .build();
+    INodeItem flag = MockedDocumentGenerator.generateOrphanedFlagNodeItem();
+    DynamicContext dynamicContext = new DynamicContext(staticContext);
+    dynamicContext.bindVariableValue(
+        qname(NS, "should-dereference-param-flag-value"),
+        IMetapathExpression
+            .compile("function($arg as meta:string) as meta:string { $arg }", dynamicContext.getStaticContext())
+            .evaluate(flag, dynamicContext));
+    String result
+        = IMetapathExpression.compile("$ex:should-dereference-param-flag-value(.)", dynamicContext.getStaticContext())
+            .evaluateAs(flag, ResultType.STRING, dynamicContext);
+    assertEquals(result, "flag");
   }
 }

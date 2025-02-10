@@ -1,0 +1,79 @@
+on:
+  push:
+    branches:
+    - develop
+  pull_request:
+    branches:
+    - develop
+  schedule:
+    - cron: '0 4 * * *'
+  merge_group:
+  workflow_dispatch:
+name: Build and Test
+env:
+  MAVEN_VERSION: 3.9.8
+  JAVA_DISTRO: 'temurin'
+  JAVA_VERSION_FILE: .java-version
+  # Post Maven artifacts to the artifact repo if the branch is 'develop' or 'release/*'. This avoids publishing artifacts for pull requests
+  COMMIT_MAVEN_ARTIFACTS: ${{ (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/')) && github.repository_owner == 'metaschema-framework' }}
+jobs:
+  build-code:
+    name: Code
+    runs-on: ubuntu-20.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        submodules: recursive
+        filter: tree:0
+    - name: Checkout maven2 branch
+      if: env.COMMIT_MAVEN_ARTIFACTS == 'true'
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        path: maven2
+        ref: main
+        repository: metaschema-framework/maven2
+        token: ${{ secrets.ACCESS_TOKEN }}
+        fetch-depth: 2
+        persist-credentials: true
+    # -------------------------
+    # Java Environment Setup
+    # -------------------------
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
+      with:
+        maven-version: ${{ env.MAVEN_VERSION }}
+    - name: Set up JDK
+      uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b
+      with:
+        java-version-file: ${{ env.JAVA_VERSION_FILE }}
+        distribution: ${{ env.JAVA_DISTRO }}
+        cache: 'maven'
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@48ab28a6f5dbc2a99bf1e0131198dd8f1df78169
+      with:
+        languages: java
+    # -------------------------
+    # Maven Build
+    # -------------------------
+    - name: Build and Test Code
+      run: |
+        mvn -B -e -Prelease -Psnapshots -DaltDeploymentRepository=repo-snapshot::file://${GITHUB_WORKSPACE}/maven2/ -DaltSnapshotDeploymentRepository=repo-snapshot::file://${GITHUB_WORKSPACE}/maven2/ -DrepositoryId=repo-snapshot deploy
+    - name: Deploy Artifacts
+      if: env.COMMIT_MAVEN_ARTIFACTS == 'true'
+      run: |
+        MVN_COORDS=$(echo '${project.groupId}:${project.artifactId}:${project.version}' | mvn -N -q -DforceStdout help:evaluate)
+        cd maven2
+        echo "Configuring git identity"
+        git config user.name "GitHub Action"
+        git config user.email "action@github.com"
+        echo "Comitting artifacts"
+        git add -A
+        git commit -m "[CI SKIP] Deploying artifacts for $MVN_COORDS."
+        echo "Syncing with latest"
+        git pull -r -s ours
+        echo "Pushing changes"
+        git push --force-with-lease
